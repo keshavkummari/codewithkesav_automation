@@ -1,0 +1,60 @@
+---
+- name: Deploy codewithkesav application
+  hosts: 'all'
+  become: yes
+
+  tasks:
+    - name: install pip
+      yum:
+       name: python-pip
+       state: present 
+    
+    - name: install boto3 and boto core
+      pip:
+       name: [ "boto3", "botocore" ]
+       extra_args: "--user"
+      
+    - name: Find out playbook's path
+      shell: pwd
+      register: playbook_path_output
+    - debug: var=playbook_path_output.stdout
+
+    - name: Install AWS CLI
+      pip:
+       name: awscli --version
+       state: present 
+
+    - name: download s3 bucket files
+      aws_s3:
+        bucket: "swts-codewithkesav-deploy"
+        object: build-codewithkesav.zip
+        dest: /home/centos/build-codewithkesav.zip
+        mode: get
+
+    - name: Unarchive a file that is already on the remote machine
+      unarchive: 
+        src: /home/centos/build-codewithkesav.zip
+        dest: /home/centos
+        remote_src: yes  
+
+    - name: Deploy war file to apache 
+      copy:
+        src: /home/centos/target/codewithkesav.zip
+        dest: /home/centos/codewithkesav/  
+
+    - name: copy extra conf files
+      copy:
+        src: /home/centos/webconfig/oidc.conf
+        dest: /etc/httpd/conf.d/
+        owner: centos
+
+    - name: copy extra conf files
+      copy:
+        src: /home/centos/webconfig/vhost.conf
+        dest: /etc/httpd/conf.d/
+        owner: centos
+      
+    - script: /home/centos/scripts/start_application.sh
+
+    - script: /home/centos/scripts/apache_start.sh
+    
