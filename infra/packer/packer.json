@@ -1,0 +1,64 @@
+{
+    "variables": {
+        "applicaiton_name": "codewithkesav",
+        "application_version": "1.0",
+        "region": "us-east-1",
+        "instance_type": "t2.micro",
+        "source_ami": "ami-006219aba10688d0b",
+        "iam_profile": "automation",
+        "ami_shared_accounts": "727203166843",
+        "artifact_bucket": "codewithkesav-artifacts",
+        "artifact_path": ""
+    },
+    "builders": [
+        {
+            "name": "{{user `application_name`}}",
+            "type": "amazon-ebs",
+            "ssh_username": "centos",
+            "force_deregister": "true",
+            "force_delete_snapshot": "true",
+            "associate_public_ip_address": "true",
+            "region": "{{user `region`}}",
+            "source_ami": "{{user `source_ami`}}",
+            "instance_type": "{{user `instance_type`}}",
+            "ami_name": "{{user `application_name`}}-{{user `application_version`}}",
+            "snapshot_users": "{{user `ami_shared_accounts`}}",
+            "tags": {
+                "Name": "{{user `application_name`}}",
+                "CreatedBy": "Packer"
+            },
+            "run_tags": {
+                "Name": "{{user `applicaiton_name`}}",
+                "CreatedBy": "packer"
+            }
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": ["sudo yum install epel-release -y"]
+        },
+        {
+            "type": "shell",
+            "inline": ["sudo yum install ansible -y"]
+        },
+        {
+            "type": "shell",
+            "inline": ["sudo yum install unzip -y"]
+        },
+        {
+            "type": "shell",
+            "inline": ["sudo yum install git -y"]
+        },
+        {
+            "type": "ansilbe-local",
+            "playbook_file": "./setup-server.yml",
+            "extra_arguments": [ "-vvvv" ]
+        },
+        {
+            "type": "ansilbe-local",
+            "playbook_file": "./deploy_app.yml",
+            "extra_arguments": [ "-vvvv" ]
+        }
+    ]
+}

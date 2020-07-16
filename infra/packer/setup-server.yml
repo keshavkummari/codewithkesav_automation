@@ -1,0 +1,28 @@
+---
+-  name: codewithkesav deployment playbook
+   hosts: 'all'
+   become: yes
+   tasks:
+
+    - name: Add EPEL Repository
+      yum:
+          name: epel-release
+          state: present
+          
+    - name:
+      yum:
+          name: Install Java
+          yum: 
+              name: java-1.8.0-openjdk
+              state: present
+
+    - name:
+        yum:
+            name: httpd
+            state: latest
+
+    - name: Ensure Module Installed
+      yum:
+          name: mod_auth_openidc
+          state: latest
+          
